@@ -1,0 +1,11 @@
+{
+  "rules": {
+    "matches": {
+      ".read": true,
+      ".write": true,
+      "$matchId": {
+        ".validate": "newData.hasChildren(['teamA', 'teamB', 'overs', 'matchStatus'])"
+      }
+    }
+  }
+}
