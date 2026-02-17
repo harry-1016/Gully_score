@@ -2,7 +2,7 @@
   "name": "GULLY SCORE",
   "short_name": "GULLY SCORE",
   "description": "Live cricket scoring app",
-  "start_url": "./index.html",
+  "start_url": "/Gully_score/index.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#1e3c72",
