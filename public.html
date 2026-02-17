@@ -445,6 +445,48 @@
         padding: 15px 20px;
         border-bottom: 1px solid #e0e0e0;
     }
+
+    /* Chase card - prominent blue box for live 2nd innings */
+    .chase-card {
+        background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+        border-radius: 12px;
+        padding: 18px 20px;
+        text-align: center;
+        margin-top: 14px;
+        border: 1px solid #bfdbfe;
+    }
+
+    .chase-runs {
+        font-size: 24px;
+        font-weight: bold;
+        color: #1d4ed8;
+        margin-bottom: 4px;
+    }
+
+    .chase-balls {
+        font-size: 15px;
+        color: #4b5563;
+    }
+
+    /* Winner banner for completed matches */
+    .winner-banner {
+        background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+        color: white;
+        text-align: center;
+        padding: 18px 20px;
+        margin: 0;
+    }
+
+    .winner-banner .trophy {
+        font-size: 30px;
+        margin-bottom: 6px;
+    }
+
+    .winner-banner .winner-text {
+        font-size: 20px;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+    }
 </style>
 ```
 
@@ -779,12 +821,30 @@
             html += `</div>`; // close innings-collapsible
         }
 
+        // Winner banner for completed matches
+        if (match.matchStatus === 'completed' && match.innings === 2) {
+            const target = match.firstInningsScore + 1;
+            let resultText = '';
+            if (match.score >= target) {
+                resultText = `🏆 ${match.battingTeam.name} won by ${10 - match.wickets} wickets`;
+            } else {
+                resultText = `🏆 ${match.bowlingTeam.name} won by ${target - match.score - 1} runs`;
+            }
+            html += `<div class="winner-banner"><div class="winner-text">${resultText}</div></div>`;
+        }
+
         // Current / 2nd innings score
+        const inningsSuffix = match.innings === 1 ? 'st' : 'nd';
+        const totalBallsInMatch = match.overs * 6;
+        const ballsBowled = (match.currentOver * 6) + match.currentBall;
+        const ballsRemaining = Math.max(0, totalBallsInMatch - ballsBowled);
+        const runsNeeded = match.innings === 2 ? Math.max(0, match.firstInningsScore + 1 - match.score) : 0;
+
         html += `
             <div class="scorecard-section">
                 <div class="main-score-display">
                     <div class="innings-label">
-                        ${match.innings}${match.innings === 1 ? 'st' : 'nd'} Innings - ${match.battingTeam.name}
+                        ${inningsSuffix} Innings - ${match.battingTeam.name}
                     </div>
                     <div class="score-large">
                         ${match.score}/${match.wickets}
@@ -793,13 +853,24 @@
                         Overs: ${match.currentOver}.${match.currentBall} / ${match.overs}
                     </div>
                     ${match.matchStatus === 'live' ? '<div style="margin-top: 10px;"><span class="live-badge">● LIVE</span></div>' : ''}
-                    ${match.innings === 2 ? `<div style="margin-top: 8px; color: #666; font-size: 14px;">Target: ${match.firstInningsScore + 1} | Need: ${Math.max(0, match.firstInningsScore + 1 - match.score)} runs</div>` : ''}
+                    ${match.matchStatus === 'live' && match.innings === 2 ? `
+                        <div class="chase-card">
+                            <div class="chase-runs">Need ${runsNeeded} runs to win</div>
+                            <div class="chase-balls">${ballsRemaining} ball${ballsRemaining !== 1 ? 's' : ''} remaining</div>
+                        </div>
+                    ` : ''}
                 </div>
             </div>
         `;
         
-        const battingTeamPlayers = match.battingTeam.players.filter(p => p.balls > 0 || p.isOut || p.isRetired);
-        const bowlingTeamPlayers = match.bowlingTeam.players.filter(p => p.bowlingBalls > 0);
+        // For completed matches, battingTeam.players may be empty — fall back to secondInningsBatting/Bowling
+        const battingTeamPlayers = (match.battingTeam.players && match.battingTeam.players.filter(p => p.balls > 0 || p.isOut || p.isRetired).length > 0)
+            ? match.battingTeam.players.filter(p => p.balls > 0 || p.isOut || p.isRetired)
+            : (match.secondInningsBatting ? match.secondInningsBatting.filter(p => p.balls > 0 || p.isOut || p.isRetired) : []);
+
+        const bowlingTeamPlayers = (match.bowlingTeam.players && match.bowlingTeam.players.filter(p => p.bowlingBalls > 0).length > 0)
+            ? match.bowlingTeam.players.filter(p => p.bowlingBalls > 0)
+            : (match.secondInningsBowling ? match.secondInningsBowling.filter(p => p.bowlingBalls > 0) : []);
         
         if (battingTeamPlayers.length > 0) {
             html += `
