@@ -113,11 +113,13 @@
 ```
     /* ── Player photo avatar on card ── */
     .player-card-avatar {
-        width: 42px;
-        height: 42px;
-        min-width: 42px;
-        min-height: 42px;
-        border-radius: 50%;
+        width: 42px !important;
+        height: 42px !important;
+        min-width: 42px !important;
+        min-height: 42px !important;
+        max-width: 42px !important;
+        max-height: 42px !important;
+        border-radius: 50% !important;
         background: linear-gradient(135deg, #ff6b35, #f7931e);
         display: flex;
         align-items: center;
@@ -125,34 +127,40 @@
         font-size: 14px;
         font-weight: bold;
         color: white;
-        flex-shrink: 0;
-        overflow: hidden;
+        flex-shrink: 0 !important;
+        overflow: hidden !important;
         border: 2.5px solid #ff6b35;
         cursor: pointer;
-        position: relative;
+        position: relative !important;
         box-shadow: 0 2px 8px rgba(255,107,53,0.3);
         transition: transform 0.15s;
+        contain: strict;
     }
     .player-card-avatar:active { transform: scale(0.9); }
     .player-card-avatar img {
-        position: absolute;
-        top: 0; left: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 50%;
-        display: block;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        border-radius: 0 !important;
+        display: block !important;
+        pointer-events: none;
     }
     .avatar-cam-overlay {
-        position: absolute;
-        inset: 0;
-        border-radius: 50%;
-        background: rgba(255, 107, 53, 0.75);
+        position: absolute !important;
+        top: 0 !important; left: 0 !important;
+        right: 0 !important; bottom: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: rgba(255, 107, 53, 0.72);
         display: none;
         align-items: center;
         justify-content: center;
         font-size: 14px;
         z-index: 2;
+        pointer-events: none;
     }
     .player-card-avatar:hover .avatar-cam-overlay,
     .player-card-avatar:active .avatar-cam-overlay { display: flex; }
@@ -1283,33 +1291,66 @@
             .catch(() => callback(null));
     }
 
-    function setAvatarPhoto(avatarEl, url) {
-        if (!avatarEl) return;
+    function setAvatarPhoto(wrapperEl, url) {
+        if (!wrapperEl) return;
         if (url) {
-            avatarEl.innerHTML = `<img src="${url}" alt="photo"><div class="avatar-cam-overlay">📷</div>`;
-        } else {
-            const name = avatarEl.dataset.playerName || '';
-            avatarEl.innerHTML = `${getPlayerInitials(name)}<div class="avatar-cam-overlay">📷</div>`;
+            applyPhotoToWrapper(wrapperEl, url);
         }
     }
 
+    function applyPhotoToWrapper(wrapper, url) {
+        const old = wrapper.querySelector('img');
+        if (old) old.remove();
+        const sp = wrapper.querySelector('span');
+        if (sp) sp.style.display = 'none';
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = 'photo';
+        img.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:block;z-index:2;pointer-events:none;';
+        wrapper.insertBefore(img, wrapper.querySelector('div'));
+    }
+
     function buildPlayerAvatar(player) {
-        const avatar = document.createElement('div');
-        avatar.className = 'player-card-avatar';
-        avatar.dataset.playerName = player.name;
-        avatar.title = 'Tap to update photo';
-        avatar.innerHTML = `${getPlayerInitials(player.name)}<div class="avatar-cam-overlay">📷</div>`;
+        // Hard outer wrapper — nothing can escape this 42×42 circle
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = [
+            'width:42px', 'height:42px', 'min-width:42px', 'max-width:42px',
+            'min-height:42px', 'max-height:42px', 'flex-shrink:0',
+            'position:relative', 'border-radius:50%', 'overflow:hidden',
+            'cursor:pointer',
+            'background:linear-gradient(135deg,#ff6b35,#f7931e)',
+            'border:2.5px solid #ff6b35',
+            'box-shadow:0 2px 8px rgba(255,107,53,.3)',
+            'display:flex', 'align-items:center', 'justify-content:center',
+        ].join(';');
+
+        // Initials
+        const sp = document.createElement('span');
+        sp.style.cssText = 'font-size:14px;font-weight:bold;color:white;z-index:1;pointer-events:none;position:relative;';
+        sp.textContent = getPlayerInitials(player.name);
+        wrapper.appendChild(sp);
+
+        // Orange camera overlay (hidden by default)
+        const ov = document.createElement('div');
+        ov.style.cssText = 'display:none;position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(255,107,53,.72);align-items:center;justify-content:center;font-size:16px;z-index:4;pointer-events:none;';
+        ov.textContent = '📷';
+        wrapper.appendChild(ov);
+
+        wrapper.addEventListener('mouseenter', () => { ov.style.display = 'flex'; });
+        wrapper.addEventListener('mouseleave', () => { ov.style.display = 'none'; });
+        wrapper.addEventListener('touchstart', () => { ov.style.display = 'flex'; }, { passive: true });
+        wrapper.addEventListener('touchend', () => { setTimeout(() => { ov.style.display = 'none'; }, 300); }, { passive: true });
 
         fetchPlayerPhoto(player.name, url => {
-            if (url) setAvatarPhoto(avatar, url);
+            if (url) applyPhotoToWrapper(wrapper, url);
         });
 
-        avatar.addEventListener('click', e => {
+        wrapper.addEventListener('click', e => {
             e.stopPropagation();
             e.preventDefault();
-            openPhotoPicker(player.name, avatar);
+            openPhotoPicker(player.name, wrapper);
         });
-        return avatar;
+        return wrapper;
     }
 
     function openPhotoPicker(playerName, avatarEl) {
@@ -1390,7 +1431,7 @@
                     task.snapshot.ref.getDownloadURL().then(url => {
                         database.ref('playerPhotos/' + key).set(url);
                         photoCache[playerName] = url;
-                        if (avatarEl) setAvatarPhoto(avatarEl, url);
+                        if (avatarEl) applyPhotoToWrapper(avatarEl, url);
                         setProgress('✅ Photo saved!');
                         setTimeout(() => { if (progressEl) progressEl.textContent = ''; }, 2500);
                     });
