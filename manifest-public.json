@@ -2,16 +2,16 @@
 “name”: “Gully Score”,
 “short_name”: “Gully Score”,
 “description”: “Live cricket scoring app”,
-“start_url”: “/Gully_score/public.html”,
+“start_url”: “./public.html”,
 “display”: “standalone”,
 “background_color”: “#1e3c72”,
 “theme_color”: “#ff6b35”,
 “orientation”: “portrait”,
 “icons”: [
 {
-“src”: “icon-192.png”,
+“src”: “Icon-192.jpg”,
 “sizes”: “192x192”,
-“type”: “image/png”,
+“type”: “image/jpeg”,
 “purpose”: “any maskable”
 },
 {
