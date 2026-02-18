@@ -512,13 +512,17 @@
         width: 72px;
         height: 72px;
         border-radius: 50%;
-        background: rgba(255,255,255,0.25);
+        background: linear-gradient(135deg, #ff6b35, #f7931e);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 34px;
+        font-size: 26px;
+        font-weight: bold;
+        color: white;
         margin: 0 auto 12px;
-        border: 3px solid rgba(255,255,255,0.5);
+        border: 3px solid rgba(255,255,255,0.6);
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
 
     .profile-name {
@@ -737,6 +741,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 <script>
     const firebaseConfig = {
         apiKey: "AIzaSyCpV2GXvuCog7bTQoutpOoQovGvtYeqclw",
@@ -1016,7 +1021,7 @@
         }
 
         // Current / 2nd innings score
-        const inningsSuffix = match.innings === 1 ? 'st' : 'nd';
+        const inningsSuffix = match.innings === 1 ? '1st' : '2nd';
         const totalBallsInMatch = match.overs * 6;
         const ballsBowled = (match.currentOver * 6) + match.currentBall;
         const ballsRemaining = Math.max(0, totalBallsInMatch - ballsBowled);
@@ -1285,22 +1290,34 @@
     function showPlayerProfile(playerName, returnScreen) {
         profileReturnScreen = returnScreen || 'scorecardScreen';
 
-        // Hide all screens, show player screen
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         const playerScreen = document.getElementById('playerScreen');
         playerScreen.classList.add('active');
 
-        // Show loading state immediately
+        // Show loading state with initials avatar immediately
+        const initials = playerName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
         playerScreen.innerHTML = `
             <div class="profile-header">
                 <span class="profile-back" onclick="closePlayerProfile()">← Back</span>
-                <div class="profile-avatar">🏏</div>
+                <div class="profile-avatar" id="profileAvatarEl">${initials}</div>
                 <div class="profile-name">${playerName}</div>
             </div>
             <div class="profile-loading">Loading match history…</div>
         `;
 
-        // Fetch all matches from Firebase and mine this player's data
+        // Fetch photo from Firebase Realtime DB (where admin saved the URL)
+        const photoKey = playerName.replace(/[.#$[\]/]/g, '_');
+        database.ref('playerPhotos/' + photoKey).once('value').then(snap => {
+            const url = snap.val();
+            if (url) {
+                const avatarEl = document.getElementById('profileAvatarEl');
+                if (avatarEl) {
+                    avatarEl.innerHTML = `<img src="${url}" alt="${playerName}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+                }
+            }
+        }).catch(() => {}); // silently ignore if photo not found
+
+        // Fetch all matches
         database.ref('matches').once('value').then(snapshot => {
             const allMatches = snapshot.val() || {};
             renderPlayerProfile(playerName, allMatches);
@@ -1403,11 +1420,15 @@
         const bestFigures = bowl.matches > 0 ? `${bowl.bestWickets}/${bowl.bestRuns === 999 ? 0 : bowl.bestRuns}` : '—';
 
         // ── Build HTML ──
+        // Preserve the avatar HTML already rendered by showPlayerProfile (photo or initials)
+        const existingAvatar = document.getElementById('profileAvatarEl');
+        const avatarHTML = existingAvatar ? existingAvatar.outerHTML : `<div class="profile-avatar" id="profileAvatarEl">🏏</div>`;
+
         const playerScreen = document.getElementById('playerScreen');
         let html = `
             <div class="profile-header">
                 <span class="profile-back" onclick="closePlayerProfile()">← Back</span>
-                <div class="profile-avatar">🏏</div>
+                ${avatarHTML}
                 <div class="profile-name">${playerName}</div>
             </div>
             <div class="profile-body">
