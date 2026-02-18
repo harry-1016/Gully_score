@@ -487,6 +487,185 @@
         font-weight: bold;
         letter-spacing: 0.5px;
     }
+
+    /* ── Player name clickable link style ── */
+    .player-name-link {
+        cursor: pointer;
+        color: #333;
+        border-bottom: 1.5px dashed #ff6b35;
+        transition: color 0.2s;
+        display: inline;
+    }
+    .player-name-link:hover { color: #ff6b35; }
+
+    /* ── Player Profile Screen ── */
+    #playerScreen { padding: 0; }
+
+    .profile-header {
+        background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+        color: white;
+        padding: 24px 20px 20px;
+        text-align: center;
+    }
+
+    .profile-avatar {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 34px;
+        margin: 0 auto 12px;
+        border: 3px solid rgba(255,255,255,0.5);
+    }
+
+    .profile-name {
+        font-size: 24px;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+
+    .profile-back {
+        cursor: pointer;
+        font-size: 13px;
+        opacity: 0.85;
+        margin-bottom: 10px;
+        display: inline-block;
+    }
+    .profile-back:hover { opacity: 1; }
+
+    .profile-body { padding: 20px; }
+
+    /* Career summary cards */
+    .career-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .career-card {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 16px 12px;
+        text-align: center;
+        border: 2px solid #e0e0e0;
+    }
+
+    .career-card-label {
+        font-size: 11px;
+        color: #888;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+    }
+
+    .career-card-value {
+        font-size: 26px;
+        font-weight: bold;
+        color: #ff6b35;
+    }
+
+    .career-card-sub {
+        font-size: 11px;
+        color: #999;
+        margin-top: 3px;
+    }
+
+    /* Section tabs */
+    .profile-tabs {
+        display: flex;
+        gap: 0;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 2px solid #e0e0e0;
+        margin-bottom: 20px;
+    }
+
+    .profile-tab {
+        flex: 1;
+        padding: 11px 8px;
+        text-align: center;
+        font-weight: bold;
+        font-size: 14px;
+        cursor: pointer;
+        background: white;
+        color: #666;
+        border: none;
+        transition: all 0.2s;
+    }
+
+    .profile-tab.active {
+        background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+        color: white;
+    }
+
+    .profile-tab-content { display: none; }
+    .profile-tab-content.active { display: block; }
+
+    /* Per-match history rows */
+    .match-history-row {
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 12px 14px;
+        margin-bottom: 10px;
+        background: white;
+    }
+
+    .match-history-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .match-history-teams {
+        font-size: 13px;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .match-history-date {
+        font-size: 11px;
+        color: #999;
+    }
+
+    .match-history-stats {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .stat-pill {
+        background: #f8f9fa;
+        border-radius: 20px;
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #555;
+        border: 1px solid #e0e0e0;
+    }
+
+    .stat-pill.highlight { background: #fff3e0; border-color: #ff6b35; color: #ff6b35; }
+    .stat-pill.wicket { background: #fff5f5; border-color: #dc3545; color: #dc3545; }
+
+    .profile-loading {
+        text-align: center;
+        padding: 40px 20px;
+        color: #999;
+        font-size: 15px;
+    }
+
+    .profile-empty {
+        text-align: center;
+        padding: 30px 20px;
+        color: #bbb;
+        font-size: 14px;
+    }
 </style>
 ```
 
@@ -524,6 +703,9 @@
     </div>
 
     <div id="scorecardScreen" class="screen"></div>
+
+    <!-- Player Profile Screen -->
+    <div id="playerScreen" class="screen"></div>
 </div>
 
 <!-- Share Modal -->
@@ -758,7 +940,7 @@
                                     return `
                                         <tr>
                                             <td class="player-name">
-                                                ${player.name}
+                                                <span class="player-name-link" onclick="showPlayerProfile('${player.name.replace(/'/g,"\\'")}','scorecardScreen')">${player.name}</span>
                                                 ${player.isOut ? `<div class="out-status" title="${dismissalLabel}">${dismissalLabel}</div>` :
                                                   player.isRetired ? `<div class="out-status" style="background:#ff9800;">${player.retiredType||'RETIRED'}</div>` :
                                                   '<div class="not-out">NOT OUT</div>'}
@@ -804,7 +986,7 @@
                                     const econ = totalOvers > 0 ? (player.bowlingRuns / totalOvers).toFixed(2) : '0.00';
                                     return `
                                         <tr>
-                                            <td class="player-name">${player.name}</td>
+                                            <td class="player-name"><span class="player-name-link" onclick="showPlayerProfile('${player.name.replace(/'/g,"\\'")}','scorecardScreen')">${player.name}</span></td>
                                             <td style="text-align: center;">${oversStr}</td>
                                             <td style="text-align: center; font-weight: bold;">${player.bowlingRuns}</td>
                                             <td style="text-align: center; font-weight: bold; color: #dc3545;">${player.bowlingWickets}</td>
@@ -900,7 +1082,7 @@
                                 return `
                                     <tr ${isStriker ? 'class="stats-highlight"' : ''}>
                                         <td class="player-name">
-                                            ${player.name}${isStriker ? ' *' : ''}
+                                            <span class="player-name-link" onclick="showPlayerProfile('${player.name.replace(/'/g,"\\'")}','scorecardScreen')">${player.name}</span>${isStriker ? ' *' : ''}
                                             ${player.isOut ?
                                                 `<div class="out-status" title="${dismissalLabel}">${dismissalLabel}</div>` :
                                                 player.isRetired ?
@@ -950,7 +1132,7 @@
                                 const isBowling = match.bowler && player.name === match.bowler.name;
                                 return `
                                     <tr ${isBowling ? 'class="stats-highlight"' : ''}>
-                                        <td class="player-name">${player.name}${isBowling ? ' *' : ''}</td>
+                                        <td class="player-name"><span class="player-name-link" onclick="showPlayerProfile('${player.name.replace(/'/g,"\\'")}','scorecardScreen')">${player.name}</span>${isBowling ? ' *' : ''}</td>
                                         <td style="text-align: center;">${oversStr}</td>
                                         <td style="text-align: center; font-weight: bold;">${player.bowlingRuns}</td>
                                         <td style="text-align: center; font-weight: bold; color: #dc3545;">${player.bowlingWickets}</td>
@@ -1091,6 +1273,249 @@
         const errorMsg = `<div class="no-matches"><div class="no-matches-icon">❌</div>Error connecting to server</div>`;
         document.getElementById('liveMatchesList').innerHTML = errorMsg;
         document.getElementById('recentMatchesList').innerHTML = errorMsg;
+    }
+
+    // ═══════════════════════════════════════════════
+    //  PLAYER PROFILE
+    // ═══════════════════════════════════════════════
+
+    // Track which screen we came from so back button works correctly
+    let profileReturnScreen = 'scorecardScreen';
+
+    function showPlayerProfile(playerName, returnScreen) {
+        profileReturnScreen = returnScreen || 'scorecardScreen';
+
+        // Hide all screens, show player screen
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        const playerScreen = document.getElementById('playerScreen');
+        playerScreen.classList.add('active');
+
+        // Show loading state immediately
+        playerScreen.innerHTML = `
+            <div class="profile-header">
+                <span class="profile-back" onclick="closePlayerProfile()">← Back</span>
+                <div class="profile-avatar">🏏</div>
+                <div class="profile-name">${playerName}</div>
+            </div>
+            <div class="profile-loading">Loading match history…</div>
+        `;
+
+        // Fetch all matches from Firebase and mine this player's data
+        database.ref('matches').once('value').then(snapshot => {
+            const allMatches = snapshot.val() || {};
+            renderPlayerProfile(playerName, allMatches);
+        }).catch(() => {
+            playerScreen.innerHTML += `<div class="profile-empty">Could not load match data.</div>`;
+        });
+    }
+
+    function closePlayerProfile() {
+        document.getElementById('playerScreen').classList.remove('active');
+        document.getElementById(profileReturnScreen).classList.add('active');
+    }
+
+    function renderPlayerProfile(playerName, allMatches) {
+        // ── Mine all appearances across all matches ──
+        const battingHistory = [];   // { matchId, match, innings, stats }
+        const bowlingHistory = [];
+
+        Object.keys(allMatches).forEach(matchId => {
+            const m = allMatches[matchId];
+            if (!m) return;
+            const matchLabel = `${m.teamA.name} vs ${m.teamB.name}`;
+            const matchDate = m.lastUpdated ? new Date(m.lastUpdated).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '';
+
+            // Helper: check a player array for this player's stats
+            function extractBatting(players, inningsLabel) {
+                if (!players) return;
+                const p = players.find(pl => pl.name === playerName);
+                if (p && (p.balls > 0 || p.isOut)) {
+                    battingHistory.push({ matchId, matchLabel, matchDate, inningsLabel, stats: p });
+                }
+            }
+            function extractBowling(players, inningsLabel) {
+                if (!players) return;
+                const p = players.find(pl => pl.name === playerName);
+                if (p && p.bowlingBalls > 0) {
+                    bowlingHistory.push({ matchId, matchLabel, matchDate, inningsLabel, stats: p });
+                }
+            }
+
+            // 1st innings stored arrays
+            extractBatting(m.firstInningsBatting, '1st Innings');
+            extractBowling(m.firstInningsBowling, '1st Innings');
+
+            // 2nd innings: battingTeam.players / bowlingTeam.players (live or completed)
+            extractBatting(m.battingTeam && m.battingTeam.players, '2nd Innings');
+            extractBowling(m.bowlingTeam && m.bowlingTeam.players, '2nd Innings');
+
+            // Fallback fields used by some completed match structures
+            extractBatting(m.secondInningsBatting, '2nd Innings');
+            extractBowling(m.secondInningsBowling, '2nd Innings');
+        });
+
+        // Deduplicate: same matchId + inningsLabel may appear from multiple sources
+        function dedupe(arr) {
+            const seen = new Set();
+            return arr.filter(item => {
+                const key = item.matchId + '|' + item.inningsLabel;
+                if (seen.has(key)) return false;
+                seen.add(key); return true;
+            });
+        }
+        const batRows = dedupe(battingHistory).sort((a,b) => b.matchId.localeCompare(a.matchId));
+        const bowlRows = dedupe(bowlingHistory).sort((a,b) => b.matchId.localeCompare(a.matchId));
+
+        // ── Career aggregates ──
+        const bat = batRows.reduce((acc, r) => {
+            const s = r.stats;
+            acc.matches++;
+            acc.runs += (s.runs || 0);
+            acc.balls += (s.balls || 0);
+            acc.fours += (s.fours || 0);
+            acc.sixes += (s.sixes || 0);
+            if (!s.isOut && !s.isRetired) acc.notOuts++;
+            if ((s.runs || 0) > acc.highest) acc.highest = s.runs || 0;
+            return acc;
+        }, { matches:0, runs:0, balls:0, fours:0, sixes:0, notOuts:0, highest:0 });
+
+        const bowl = bowlRows.reduce((acc, r) => {
+            const s = r.stats;
+            acc.matches++;
+            acc.balls += (s.bowlingBalls || 0);
+            acc.runs += (s.bowlingRuns || 0);
+            acc.wickets += (s.bowlingWickets || 0);
+            if ((s.bowlingWickets || 0) > acc.bestWickets ||
+                ((s.bowlingWickets || 0) === acc.bestWickets && (s.bowlingRuns||0) < acc.bestRuns)) {
+                acc.bestWickets = s.bowlingWickets || 0;
+                acc.bestRuns = s.bowlingRuns || 0;
+            }
+            return acc;
+        }, { matches:0, balls:0, runs:0, wickets:0, bestWickets:0, bestRuns:999 });
+
+        const batAvg = bat.matches > 0 && (bat.matches - bat.notOuts) > 0
+            ? (bat.runs / (bat.matches - bat.notOuts)).toFixed(1)
+            : bat.runs > 0 ? '∞' : '—';
+        const batSR = bat.balls > 0 ? ((bat.runs / bat.balls) * 100).toFixed(1) : '—';
+        const bowlOvers = `${Math.floor(bowl.balls/6)}.${bowl.balls%6}`;
+        const bowlAvg = bowl.wickets > 0 ? (bowl.runs / bowl.wickets).toFixed(1) : '—';
+        const bowlEcon = bowl.balls > 0 ? (bowl.runs / (bowl.balls/6)).toFixed(2) : '—';
+        const bestFigures = bowl.matches > 0 ? `${bowl.bestWickets}/${bowl.bestRuns === 999 ? 0 : bowl.bestRuns}` : '—';
+
+        // ── Build HTML ──
+        const playerScreen = document.getElementById('playerScreen');
+        let html = `
+            <div class="profile-header">
+                <span class="profile-back" onclick="closePlayerProfile()">← Back</span>
+                <div class="profile-avatar">🏏</div>
+                <div class="profile-name">${playerName}</div>
+            </div>
+            <div class="profile-body">
+        `;
+
+        // Career summary grid
+        if (bat.matches > 0 || bowl.matches > 0) {
+            html += `<div style="font-size:13px;font-weight:bold;color:#ff6b35;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">🏆 Career Summary</div>`;
+            html += `<div class="career-grid">`;
+            if (bat.matches > 0) {
+                html += `
+                    <div class="career-card"><div class="career-card-label">Total Runs</div><div class="career-card-value">${bat.runs}</div><div class="career-card-sub">${bat.matches} inning${bat.matches!==1?'s':''}</div></div>
+                    <div class="career-card"><div class="career-card-label">Highest</div><div class="career-card-value">${bat.highest}</div><div class="career-card-sub">Best score</div></div>
+                    <div class="career-card"><div class="career-card-label">Avg</div><div class="career-card-value">${batAvg}</div><div class="career-card-sub">Batting avg</div></div>
+                    <div class="career-card"><div class="career-card-label">Strike Rate</div><div class="career-card-value">${batSR}</div><div class="career-card-sub">${bat.fours}×4  ${bat.sixes}×6</div></div>
+                `;
+            }
+            if (bowl.matches > 0) {
+                html += `
+                    <div class="career-card"><div class="career-card-label">Wickets</div><div class="career-card-value" style="color:#dc3545;">${bowl.wickets}</div><div class="career-card-sub">${bowl.matches} spell${bowl.matches!==1?'s':''}</div></div>
+                    <div class="career-card"><div class="career-card-label">Best</div><div class="career-card-value" style="color:#dc3545;">${bestFigures}</div><div class="career-card-sub">Best figures</div></div>
+                    <div class="career-card"><div class="career-card-label">Economy</div><div class="career-card-value" style="color:#dc3545;">${bowlEcon}</div><div class="career-card-sub">${bowlOvers} overs</div></div>
+                    <div class="career-card"><div class="career-card-label">Bowl Avg</div><div class="career-card-value" style="color:#dc3545;">${bowlAvg}</div><div class="career-card-sub">Avg per wicket</div></div>
+                `;
+            }
+            html += `</div>`;
+        }
+
+        // Tabs
+        const showBowl = bowl.matches > 0;
+        const showBat = bat.matches > 0;
+
+        if (showBat || showBowl) {
+            html += `
+                <div class="profile-tabs">
+                    ${showBat ? `<button class="profile-tab active" id="tab-bat" onclick="switchProfileTab('bat')">🏏 Batting (${batRows.length})</button>` : ''}
+                    ${showBowl ? `<button class="profile-tab ${!showBat ? 'active' : ''}" id="tab-bowl" onclick="switchProfileTab('bowl')">⚾ Bowling (${bowlRows.length})</button>` : ''}
+                </div>
+            `;
+
+            // Batting history tab
+            if (showBat) {
+                html += `<div class="profile-tab-content active" id="tabcontent-bat">`;
+                batRows.forEach(row => {
+                    const s = row.stats;
+                    const sr = s.balls > 0 ? ((s.runs/s.balls)*100).toFixed(0) : 0;
+                    const dismissalText = s.isOut ? (s.dismissal || 'OUT') : s.isRetired ? (s.retiredType || 'Retired') : 'Not Out';
+                    const isNotOut = !s.isOut && !s.isRetired;
+                    html += `
+                        <div class="match-history-row">
+                            <div class="match-history-meta">
+                                <div class="match-history-teams">${row.matchLabel}</div>
+                                <div class="match-history-date">${row.matchDate}</div>
+                            </div>
+                            <div style="font-size:11px;color:#aaa;margin-bottom:8px;">${row.inningsLabel}</div>
+                            <div class="match-history-stats">
+                                <span class="stat-pill highlight">${s.runs}${isNotOut ? '*' : ''} (${s.balls}b)</span>
+                                <span class="stat-pill">SR ${sr}</span>
+                                ${s.fours > 0 ? `<span class="stat-pill">${s.fours}×4️⃣</span>` : ''}
+                                ${s.sixes > 0 ? `<span class="stat-pill">${s.sixes}×6️⃣</span>` : ''}
+                                <span class="stat-pill" style="${s.isOut?'color:#dc3545;':isNotOut?'color:#28a745;':''}">${dismissalText}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            // Bowling history tab
+            if (showBowl) {
+                html += `<div class="profile-tab-content ${!showBat ? 'active' : ''}" id="tabcontent-bowl">`;
+                bowlRows.forEach(row => {
+                    const s = row.stats;
+                    const overs = `${Math.floor(s.bowlingBalls/6)}.${s.bowlingBalls%6}`;
+                    const econ = s.bowlingBalls > 0 ? (s.bowlingRuns/(s.bowlingBalls/6)).toFixed(1) : '0.0';
+                    html += `
+                        <div class="match-history-row">
+                            <div class="match-history-meta">
+                                <div class="match-history-teams">${row.matchLabel}</div>
+                                <div class="match-history-date">${row.matchDate}</div>
+                            </div>
+                            <div style="font-size:11px;color:#aaa;margin-bottom:8px;">${row.inningsLabel}</div>
+                            <div class="match-history-stats">
+                                <span class="stat-pill wicket">${s.bowlingWickets}/${s.bowlingRuns}</span>
+                                <span class="stat-pill">${overs} overs</span>
+                                <span class="stat-pill">Econ ${econ}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+        } else {
+            html += `<div class="profile-empty"><div style="font-size:48px;margin-bottom:12px;">🏏</div>No match data found for ${playerName}</div>`;
+        }
+
+        html += `</div>`; // close profile-body
+        playerScreen.innerHTML = html;
+    }
+
+    function switchProfileTab(tab) {
+        document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.profile-tab-content').forEach(t => t.classList.remove('active'));
+        const tabEl = document.getElementById('tab-' + tab);
+        const contentEl = document.getElementById('tabcontent-' + tab);
+        if (tabEl) tabEl.classList.add('active');
+        if (contentEl) contentEl.classList.add('active');
     }
 
     window.addEventListener('beforeunload', () => {
