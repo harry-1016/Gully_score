@@ -109,49 +109,76 @@
         .player-card-edit-btn:hover { border-color: #ff6b35; color: #ff6b35; }
         .player-card-edit-input { flex: 1; padding: 6px 10px; border: 2px solid #ff6b35; border-radius: 6px; font-size: 14px; outline: none; }
         .player-card-save-btn { background: #28a745; color: white; border: none; border-radius: 6px; padding: 6px 12px; font-size: 13px; cursor: pointer; flex-shrink: 0; }
-        .dismissal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-        .dismissal-btn { padding: 14px 8px; border: 2px solid #e0e0e0; border-radius: 10px; background: white; font-size: 14px; font-weight: bold; cursor: pointer; text-align: center; transition: all 0.2s; }
-        .dismissal-btn:hover { border-color: #ff6b35; background: #fff5f0; }
-        .dismissal-btn.caught  { border-color: #007bff; color: #007bff; background: #e8f4ff; }
-        .dismissal-btn.bowled  { border-color: #dc3545; color: #dc3545; background: #fff5f5; }
-        .dismissal-btn.lbw     { border-color: #6f42c1; color: #6f42c1; background: #f5f0ff; }
-        .dismissal-btn.stumped { border-color: #fd7e14; color: #fd7e14; background: #fff3e8; }
-        .dismissal-btn.runout  { border-color: #e83e8c; color: #e83e8c; background: #fff0f5; }
-        .dismissal-btn.other   { border-color: #6c757d; color: #6c757d; }
-        .dismissal-btn.retired { border-color: #ff9800; color: #ff9800; background: #fff8e1; }
-        .fielder-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-        .fielder-btn { padding: 11px 8px; border: 2px solid #e0e0e0; border-radius: 8px; background: white; font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.2s; }
-        .fielder-btn:hover { border-color: #28a745; background: #f0fff4; color: #28a745; }
-        .modal-step-title { font-size: 12px; font-weight: bold; color: #ff6b35; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; margin-bottom: 12px; }
-        .modal-back-btn { width: 100%; padding: 10px; background: #f0f0f0; border: none; border-radius: 8px; color: #666; font-size: 13px; font-weight: bold; cursor: pointer; margin-top: 4px; }
-        .modal-back-btn:hover { background: #e0e0e0; }
-        .target-info { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; display: none; }
-        .target-info.show { display: block; }
-        .target-runs { font-size: 20px; font-weight: bold; color: #1976d2; margin-bottom: 5px; }
-        .target-balls { font-size: 14px; color: #666; }
-        .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .action-btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
-        .undo-btn { background: #ffc107; color: #333; }
-        .end-innings-btn { background: #dc3545; color: white; }
-        .scorecard-btn { background: #007bff; color: white; }
-        .end-match-btn { background: #28a745; color: white; }
-        .scorecard-panel { margin-top: 12px; border: 2px solid #ff6b35; border-radius: 12px; overflow: hidden; }
-        .scorecard-toggle { background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%); color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; font-size: 14px; user-select: none; }
-        .scorecard-toggle-arrow { transition: transform 0.3s; }
-        .scorecard-panel.open .scorecard-toggle-arrow { transform: rotate(180deg); }
-        .scorecard-inner { display: none; background: white; padding: 12px; }
-        .scorecard-panel.open .scorecard-inner { display: block; }
-        .sc-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 12px; }
-        .sc-table th { background: #f8f9fa; padding: 6px 4px; text-align: left; color: #666; font-size: 11px; font-weight: 600; border-bottom: 1px solid #e0e0e0; }
-        .sc-table td { padding: 6px 4px; border-bottom: 1px solid #f5f5f5; }
-        .sc-table tr:last-child td { border-bottom: none; }
-        .sc-table .sc-active { background: #fff3e0; }
-        .sc-badge { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 9px; font-weight: bold; margin-left: 4px; vertical-align: middle; }
-        .sc-badge.out { background: #dc3545; color: white; }
-        .sc-badge.retired { background: #ff9800; color: white; }
-        .sc-badge.batting { background: #28a745; color: white; }
-        .sc-section-label { font-size: 11px; font-weight: bold; color: #ff6b35; margin: 8px 0 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-    </style>
+
+```
+    /* ── Player photo avatar on card ── */
+    .player-card-avatar {
+        width: 38px; height: 38px; border-radius: 50%;
+        background: linear-gradient(135deg, #ff6b35, #f7931e);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 15px; font-weight: bold; color: white;
+        flex-shrink: 0; overflow: hidden; border: 2px solid #e0e0e0;
+        cursor: pointer; position: relative;
+    }
+    .player-card-avatar img {
+        width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+    }
+    .player-card-avatar:hover::after {
+        content: '📷';
+        position: absolute; inset: 0;
+        background: rgba(0,0,0,0.45);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 16px; border-radius: 50%;
+    }
+    .photo-upload-progress {
+        font-size: 10px; color: #ff6b35; text-align: center;
+        margin-top: 2px; font-weight: bold;
+    }
+    .dismissal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .dismissal-btn { padding: 14px 8px; border: 2px solid #e0e0e0; border-radius: 10px; background: white; font-size: 14px; font-weight: bold; cursor: pointer; text-align: center; transition: all 0.2s; }
+    .dismissal-btn:hover { border-color: #ff6b35; background: #fff5f0; }
+    .dismissal-btn.caught  { border-color: #007bff; color: #007bff; background: #e8f4ff; }
+    .dismissal-btn.bowled  { border-color: #dc3545; color: #dc3545; background: #fff5f5; }
+    .dismissal-btn.lbw     { border-color: #6f42c1; color: #6f42c1; background: #f5f0ff; }
+    .dismissal-btn.stumped { border-color: #fd7e14; color: #fd7e14; background: #fff3e8; }
+    .dismissal-btn.runout  { border-color: #e83e8c; color: #e83e8c; background: #fff0f5; }
+    .dismissal-btn.other   { border-color: #6c757d; color: #6c757d; }
+    .dismissal-btn.retired { border-color: #ff9800; color: #ff9800; background: #fff8e1; }
+    .fielder-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .fielder-btn { padding: 11px 8px; border: 2px solid #e0e0e0; border-radius: 8px; background: white; font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.2s; }
+    .fielder-btn:hover { border-color: #28a745; background: #f0fff4; color: #28a745; }
+    .modal-step-title { font-size: 12px; font-weight: bold; color: #ff6b35; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; margin-bottom: 12px; }
+    .modal-back-btn { width: 100%; padding: 10px; background: #f0f0f0; border: none; border-radius: 8px; color: #666; font-size: 13px; font-weight: bold; cursor: pointer; margin-top: 4px; }
+    .modal-back-btn:hover { background: #e0e0e0; }
+    .target-info { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; display: none; }
+    .target-info.show { display: block; }
+    .target-runs { font-size: 20px; font-weight: bold; color: #1976d2; margin-bottom: 5px; }
+    .target-balls { font-size: 14px; color: #666; }
+    .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+    .action-btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+    .undo-btn { background: #ffc107; color: #333; }
+    .end-innings-btn { background: #dc3545; color: white; }
+    .scorecard-btn { background: #007bff; color: white; }
+    .end-match-btn { background: #28a745; color: white; }
+    .scorecard-panel { margin-top: 12px; border: 2px solid #ff6b35; border-radius: 12px; overflow: hidden; }
+    .scorecard-toggle { background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%); color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; font-size: 14px; user-select: none; }
+    .scorecard-toggle-arrow { transition: transform 0.3s; }
+    .scorecard-panel.open .scorecard-toggle-arrow { transform: rotate(180deg); }
+    .scorecard-inner { display: none; background: white; padding: 12px; }
+    .scorecard-panel.open .scorecard-inner { display: block; }
+    .sc-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 12px; }
+    .sc-table th { background: #f8f9fa; padding: 6px 4px; text-align: left; color: #666; font-size: 11px; font-weight: 600; border-bottom: 1px solid #e0e0e0; }
+    .sc-table td { padding: 6px 4px; border-bottom: 1px solid #f5f5f5; }
+    .sc-table tr:last-child td { border-bottom: none; }
+    .sc-table .sc-active { background: #fff3e0; }
+    .sc-badge { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 9px; font-weight: bold; margin-left: 4px; vertical-align: middle; }
+    .sc-badge.out { background: #dc3545; color: white; }
+    .sc-badge.retired { background: #ff9800; color: white; }
+    .sc-badge.batting { background: #28a745; color: white; }
+    .sc-section-label { font-size: 11px; font-weight: bold; color: #ff6b35; margin: 8px 0 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+</style>
+```
+
 </head>
 <body>
     <div class="container">
@@ -378,6 +405,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 <script>
     const firebaseConfig = {
         apiKey: "AIzaSyCpV2GXvuCog7bTQoutpOoQovGvtYeqclw",
@@ -390,6 +418,7 @@
     };
 
     let database;
+    let storage;
     let currentMatchId;
     const ADMIN_PASSWORD = 'Hari@1016';
     const SESSION_KEY = 'gullyScoreAdminSession';
@@ -548,6 +577,7 @@
         try {
             if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
             database = firebase.database();
+            storage = firebase.storage();
         } catch (e) {
             alert('Firebase configuration error. Please check your Firebase config.');
         }
@@ -654,6 +684,10 @@
             const isSelected = selectedName === player.name;
             const row = document.createElement('div');
             row.className = 'player-card-row' + (isDisabled ? ' disabled' : '') + (isSelected ? ' selected' : '');
+
+            // Avatar (photo or initials)
+            const avatar = buildPlayerAvatar(player);
+            row.appendChild(avatar);
 
             const info = document.createElement('div');
             info.className = 'player-card-info';
@@ -1152,6 +1186,135 @@
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
     // ── Team Management ──
+    // ═══════════════════════════════════════════════
+    //  PLAYER PHOTO UPLOAD
+    // ═══════════════════════════════════════════════
+
+    // Cache: playerName → photoURL (avoids re-fetching on every render)
+    const photoCache = {};
+
+    function getPlayerInitials(name) {
+        return name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+    }
+
+    // Fetch photo URL from DB, with cache
+    function fetchPlayerPhoto(playerName, callback) {
+        if (photoCache[playerName]) { callback(photoCache[playerName]); return; }
+        database.ref('playerPhotos/' + encodePlayerKey(playerName)).once('value')
+            .then(snap => {
+                const url = snap.val();
+                if (url) photoCache[playerName] = url;
+                callback(url || null);
+            })
+            .catch(() => callback(null));
+    }
+
+    // Firebase keys can't have . # $ [ ] / — encode player name
+    function encodePlayerKey(name) {
+        return name.replace(/[.#$[\]/]/g, '_');
+    }
+
+    // Compress image to max 400px and ~60KB before uploading
+    function compressImage(file, callback) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const MAX = 400;
+                let w = img.width, h = img.height;
+                if (w > h) { if (w > MAX) { h = h * MAX / w; w = MAX; } }
+                else { if (h > MAX) { w = w * MAX / h; h = MAX; } }
+                canvas.width = w; canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                canvas.toBlob(blob => callback(blob), 'image/jpeg', 0.72);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // Called when user taps the avatar on a player card
+    function triggerPhotoUpload(playerName, avatarEl) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.capture = 'user'; // prefer front camera on mobile
+        input.onchange = function() {
+            const file = input.files[0];
+            if (!file) return;
+
+            // Show progress indicator
+            let progressEl = avatarEl.parentElement.querySelector('.photo-upload-progress');
+            if (!progressEl) {
+                progressEl = document.createElement('div');
+                progressEl.className = 'photo-upload-progress';
+                avatarEl.parentElement.appendChild(progressEl);
+            }
+            progressEl.textContent = 'Compressing…';
+
+            compressImage(file, function(blob) {
+                progressEl.textContent = 'Uploading…';
+                const key = encodePlayerKey(playerName);
+                const ref = storage.ref('playerPhotos/' + key + '.jpg');
+                const uploadTask = ref.put(blob, { contentType: 'image/jpeg' });
+
+                uploadTask.on('state_changed',
+                    snapshot => {
+                        const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                        progressEl.textContent = `Uploading… ${pct}%`;
+                    },
+                    error => {
+                        progressEl.textContent = '❌ Upload failed';
+                        console.error('Upload error:', error);
+                        setTimeout(() => progressEl.remove(), 3000);
+                    },
+                    () => {
+                        uploadTask.snapshot.ref.getDownloadURL().then(url => {
+                            // Save URL to Realtime DB
+                            database.ref('playerPhotos/' + key).set(url);
+                            // Update cache
+                            photoCache[playerName] = url;
+                            // Update avatar immediately
+                            setAvatarPhoto(avatarEl, url);
+                            progressEl.textContent = '✅ Saved!';
+                            setTimeout(() => progressEl.remove(), 2000);
+                        });
+                    }
+                );
+            });
+        };
+        input.click();
+    }
+
+    // Set avatar element to show a photo or initials
+    function setAvatarPhoto(avatarEl, url) {
+        if (url) {
+            avatarEl.innerHTML = `<img src="${url}" alt="photo">`;
+        }
+        // if no url, keep initials (already set when created)
+    }
+
+    // Build an avatar element for a player card
+    function buildPlayerAvatar(player) {
+        const avatar = document.createElement('div');
+        avatar.className = 'player-card-avatar';
+        avatar.title = 'Tap to update photo';
+        avatar.textContent = getPlayerInitials(player.name);
+
+        // Load cached or fetch photo
+        fetchPlayerPhoto(player.name, url => {
+            if (url) setAvatarPhoto(avatar, url);
+        });
+
+        avatar.addEventListener('click', e => {
+            e.stopPropagation();
+            triggerPhotoUpload(player.name, avatar);
+        });
+        return avatar;
+    }
+
     function saveTeamToFirebase(teamName, players) {
         if (!teamName || !players || players.length===0 || !database) return;
         database.ref('teams/' + teamName).set({ name: teamName, players, lastUsed: Date.now() }).catch(console.error);
