@@ -113,26 +113,73 @@
 ```
     /* ── Player photo avatar on card ── */
     .player-card-avatar {
-        width: 38px; height: 38px; border-radius: 50%;
+        width: 44px; height: 44px; border-radius: 50%;
         background: linear-gradient(135deg, #ff6b35, #f7931e);
         display: flex; align-items: center; justify-content: center;
         font-size: 15px; font-weight: bold; color: white;
-        flex-shrink: 0; overflow: hidden; border: 2px solid #e0e0e0;
+        flex-shrink: 0; overflow: hidden;
+        border: 2px solid rgba(255,107,53,0.3);
         cursor: pointer; position: relative;
+        box-shadow: 0 2px 8px rgba(255,107,53,0.25);
+        transition: transform 0.15s, box-shadow 0.15s;
     }
+    .player-card-avatar:active { transform: scale(0.93); }
     .player-card-avatar img {
         width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
     }
-    .player-card-avatar:hover::after {
-        content: '📷';
-        position: absolute; inset: 0;
-        background: rgba(0,0,0,0.45);
-        display: flex; align-items: center; justify-content: center;
-        font-size: 16px; border-radius: 50%;
+    .avatar-cam-overlay {
+        position: absolute; inset: 0; border-radius: 50%;
+        background: rgba(0,0,0,0.38);
+        display: none; align-items: center; justify-content: center;
+        font-size: 15px;
     }
+    .player-card-avatar:hover .avatar-cam-overlay { display: flex; }
+
+    /* ── Photo picker bottom sheet ── */
+    .photo-picker-sheet {
+        display: none; position: fixed; inset: 0; z-index: 9999;
+        background: rgba(0,0,0,0.55);
+        align-items: flex-end; justify-content: center;
+    }
+    .photo-picker-sheet.active { display: flex; }
+    .photo-picker-inner {
+        background: white; border-radius: 20px 20px 0 0;
+        padding: 22px 20px 36px; width: 100%; max-width: 520px;
+    }
+    .photo-picker-title {
+        font-size: 13px; font-weight: bold; color: #999;
+        text-align: center; text-transform: uppercase;
+        letter-spacing: 0.5px; margin-bottom: 18px;
+    }
+    .photo-picker-player {
+        font-size: 17px; font-weight: bold; color: #333;
+        text-align: center; margin-bottom: 20px;
+    }
+    .photo-picker-btn {
+        width: 100%; padding: 16px; border: 2px solid #e0e0e0;
+        border-radius: 12px; background: white;
+        font-size: 16px; font-weight: bold; color: #333;
+        cursor: pointer; margin-bottom: 10px;
+        display: flex; align-items: center; gap: 14px;
+        transition: all 0.2s;
+    }
+    .photo-picker-btn:hover { border-color: #ff6b35; background: #fff5f0; }
+    .photo-picker-btn .btn-icon {
+        width: 44px; height: 44px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px; flex-shrink: 0;
+    }
+    .photo-picker-btn.camera .btn-icon { background: #e3f2fd; }
+    .photo-picker-btn.gallery .btn-icon { background: #f3e5f5; }
+    .photo-picker-cancel {
+        width: 100%; padding: 14px; border: none; border-radius: 12px;
+        background: #f5f5f5; font-size: 15px; font-weight: bold;
+        color: #666; cursor: pointer; margin-top: 6px;
+    }
+    .photo-picker-cancel:hover { background: #eee; }
     .photo-upload-progress {
-        font-size: 10px; color: #ff6b35; text-align: center;
-        margin-top: 2px; font-weight: bold;
+        font-size: 11px; color: #ff6b35; text-align: center;
+        font-weight: bold; margin-top: 3px; min-height: 16px;
     }
     .dismissal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
     .dismissal-btn { padding: 14px 8px; border: 2px solid #e0e0e0; border-radius: 10px; background: white; font-size: 14px; font-weight: bold; cursor: pointer; text-align: center; transition: all 0.2s; }
@@ -1190,16 +1237,21 @@
     //  PLAYER PHOTO UPLOAD
     // ═══════════════════════════════════════════════
 
-    // Cache: playerName → photoURL (avoids re-fetching on every render)
     const photoCache = {};
+    let _photoPickerAvatar = null;   // the avatar DOM element currently being updated
+    let _photoPickerName   = null;   // player name currently being updated
 
     function getPlayerInitials(name) {
-        return name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+        return (name || '?').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
     }
 
-    // Fetch photo URL from DB, with cache
+    function encodePlayerKey(name) {
+        return (name || '').replace(/[.#$[\]/\s]/g, '_');
+    }
+
     function fetchPlayerPhoto(playerName, callback) {
         if (photoCache[playerName]) { callback(photoCache[playerName]); return; }
+        if (!database) { callback(null); return; }
         database.ref('playerPhotos/' + encodePlayerKey(playerName)).once('value')
             .then(snap => {
                 const url = snap.val();
@@ -1209,110 +1261,141 @@
             .catch(() => callback(null));
     }
 
-    // Firebase keys can't have . # $ [ ] / — encode player name
-    function encodePlayerKey(name) {
-        return name.replace(/[.#$[\]/]/g, '_');
-    }
-
-    // Compress image to max 400px and ~60KB before uploading
-    function compressImage(file, callback) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = new Image();
-            img.onload = function() {
-                const canvas = document.createElement('canvas');
-                const MAX = 400;
-                let w = img.width, h = img.height;
-                if (w > h) { if (w > MAX) { h = h * MAX / w; w = MAX; } }
-                else { if (h > MAX) { w = w * MAX / h; h = MAX; } }
-                canvas.width = w; canvas.height = h;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, w, h);
-                canvas.toBlob(blob => callback(blob), 'image/jpeg', 0.72);
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
-
-    // Called when user taps the avatar on a player card
-    function triggerPhotoUpload(playerName, avatarEl) {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.capture = 'user'; // prefer front camera on mobile
-        input.onchange = function() {
-            const file = input.files[0];
-            if (!file) return;
-
-            // Show progress indicator
-            let progressEl = avatarEl.parentElement.querySelector('.photo-upload-progress');
-            if (!progressEl) {
-                progressEl = document.createElement('div');
-                progressEl.className = 'photo-upload-progress';
-                avatarEl.parentElement.appendChild(progressEl);
-            }
-            progressEl.textContent = 'Compressing…';
-
-            compressImage(file, function(blob) {
-                progressEl.textContent = 'Uploading…';
-                const key = encodePlayerKey(playerName);
-                const ref = storage.ref('playerPhotos/' + key + '.jpg');
-                const uploadTask = ref.put(blob, { contentType: 'image/jpeg' });
-
-                uploadTask.on('state_changed',
-                    snapshot => {
-                        const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-                        progressEl.textContent = `Uploading… ${pct}%`;
-                    },
-                    error => {
-                        progressEl.textContent = '❌ Upload failed';
-                        console.error('Upload error:', error);
-                        setTimeout(() => progressEl.remove(), 3000);
-                    },
-                    () => {
-                        uploadTask.snapshot.ref.getDownloadURL().then(url => {
-                            // Save URL to Realtime DB
-                            database.ref('playerPhotos/' + key).set(url);
-                            // Update cache
-                            photoCache[playerName] = url;
-                            // Update avatar immediately
-                            setAvatarPhoto(avatarEl, url);
-                            progressEl.textContent = '✅ Saved!';
-                            setTimeout(() => progressEl.remove(), 2000);
-                        });
-                    }
-                );
-            });
-        };
-        input.click();
-    }
-
-    // Set avatar element to show a photo or initials
     function setAvatarPhoto(avatarEl, url) {
+        if (!avatarEl) return;
         if (url) {
-            avatarEl.innerHTML = `<img src="${url}" alt="photo">`;
+            avatarEl.innerHTML = `<img src="${url}" alt="photo"><div class="avatar-cam-overlay">📷</div>`;
+        } else {
+            const name = avatarEl.dataset.playerName || '';
+            avatarEl.innerHTML = `${getPlayerInitials(name)}<div class="avatar-cam-overlay">📷</div>`;
         }
-        // if no url, keep initials (already set when created)
     }
 
-    // Build an avatar element for a player card
     function buildPlayerAvatar(player) {
         const avatar = document.createElement('div');
         avatar.className = 'player-card-avatar';
+        avatar.dataset.playerName = player.name;
         avatar.title = 'Tap to update photo';
-        avatar.textContent = getPlayerInitials(player.name);
+        avatar.innerHTML = `${getPlayerInitials(player.name)}<div class="avatar-cam-overlay">📷</div>`;
 
-        // Load cached or fetch photo
         fetchPlayerPhoto(player.name, url => {
             if (url) setAvatarPhoto(avatar, url);
         });
 
         avatar.addEventListener('click', e => {
             e.stopPropagation();
-            triggerPhotoUpload(player.name, avatar);
+            e.preventDefault();
+            openPhotoPicker(player.name, avatar);
         });
         return avatar;
+    }
+
+    function openPhotoPicker(playerName, avatarEl) {
+        _photoPickerName   = playerName;
+        _photoPickerAvatar = avatarEl;
+        document.getElementById('photoPickerPlayerName').textContent = playerName;
+        document.getElementById('photoPickerSheet').classList.add('active');
+    }
+
+    function closePhotoPicker() {
+        document.getElementById('photoPickerSheet').classList.remove('active');
+        _photoPickerName   = null;
+        _photoPickerAvatar = null;
+    }
+
+    // source: 'camera' | 'gallery'
+    function pickPhoto(source) {
+        // Capture before close clears them
+        const playerName = _photoPickerName;
+        const avatarEl   = _photoPickerAvatar;
+        closePhotoPicker();
+        if (!playerName) return;
+
+        // Build hidden file input
+        const input = document.createElement('input');
+        input.type   = 'file';
+        input.accept = 'image/*';
+        if (source === 'camera') {
+            input.capture = 'environment'; // rear camera; use 'user' for selfie
+        }
+        // No capture attr for gallery — lets user pick normally
+
+        input.onchange = function() {
+            const file = input.files && input.files[0];
+            if (!file) return;
+            handlePhotoFile(file, playerName, avatarEl);
+        };
+
+        // Must be in DOM briefly on iOS for click to work
+        input.style.cssText = 'position:fixed;opacity:0;top:0;left:0;width:1px;height:1px;';
+        document.body.appendChild(input);
+        setTimeout(() => {
+            input.click();
+            setTimeout(() => document.body.removeChild(input), 5000);
+        }, 100);
+    }
+
+    function handlePhotoFile(file, playerName, avatarEl) {
+        // Find or create progress label under the avatar's parent row
+        const row = avatarEl ? avatarEl.closest('.player-card-row') : null;
+        let progressEl = row ? row.querySelector('.photo-upload-progress') : null;
+        if (!progressEl && row) {
+            progressEl = document.createElement('div');
+            progressEl.className = 'photo-upload-progress';
+            row.appendChild(progressEl);
+        }
+        const setProgress = t => { if (progressEl) progressEl.textContent = t; };
+
+        setProgress('Compressing…');
+        compressImage(file, function(blob) {
+            if (!blob) { setProgress('❌ Compression failed'); return; }
+            setProgress('Uploading…');
+            const key = encodePlayerKey(playerName);
+            const storageRef = storage.ref('playerPhotos/' + key + '.jpg');
+            const task = storageRef.put(blob, { contentType: 'image/jpeg' });
+
+            task.on('state_changed',
+                snap => {
+                    const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+                    setProgress(`Uploading… ${pct}%`);
+                },
+                err => {
+                    console.error('Upload error:', err);
+                    setProgress('❌ Upload failed');
+                    setTimeout(() => { if (progressEl) progressEl.textContent = ''; }, 3000);
+                },
+                () => {
+                    task.snapshot.ref.getDownloadURL().then(url => {
+                        database.ref('playerPhotos/' + key).set(url);
+                        photoCache[playerName] = url;
+                        if (avatarEl) setAvatarPhoto(avatarEl, url);
+                        setProgress('✅ Photo saved!');
+                        setTimeout(() => { if (progressEl) progressEl.textContent = ''; }, 2500);
+                    });
+                }
+            );
+        });
+    }
+
+    function compressImage(file, callback) {
+        const reader = new FileReader();
+        reader.onerror = () => callback(null);
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onerror = () => callback(null);
+            img.onload = function() {
+                const MAX = 400;
+                let w = img.width, h = img.height;
+                if (w > h) { if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; } }
+                else       { if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; } }
+                const canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                canvas.toBlob(blob => callback(blob), 'image/jpeg', 0.75);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
     }
 
     function saveTeamToFirebase(teamName, players) {
@@ -1414,6 +1497,29 @@
 
     window.onload = init;
 </script>
+
+<!-- Photo Picker Bottom Sheet -->
+<div class="photo-picker-sheet" id="photoPickerSheet" onclick="if(event.target===this)closePhotoPicker()">
+    <div class="photo-picker-inner">
+        <div class="photo-picker-title">Update Profile Photo</div>
+        <div class="photo-picker-player" id="photoPickerPlayerName"></div>
+        <button class="photo-picker-btn camera" onclick="pickPhoto('camera')">
+            <div class="btn-icon">📷</div>
+            <div>
+                <div>Take Photo</div>
+                <div style="font-size:12px;font-weight:normal;color:#999;margin-top:2px;">Open camera</div>
+            </div>
+        </button>
+        <button class="photo-picker-btn gallery" onclick="pickPhoto('gallery')">
+            <div class="btn-icon">🖼️</div>
+            <div>
+                <div>Choose from Gallery</div>
+                <div style="font-size:12px;font-weight:normal;color:#999;margin-top:2px;">Pick existing photo</div>
+            </div>
+        </button>
+        <button class="photo-picker-cancel" onclick="closePhotoPicker()">Cancel</button>
+    </div>
+</div>
 ```
 
 </body>
